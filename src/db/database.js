@@ -1,0 +1,59 @@
+import Dexie from 'dexie'
+
+export const db = new Dexie('FamilyRecipesDB')
+
+db.version(8).stores({
+  profiles:
+    '++id, name, createdAt, updatedAt',
+
+  recipes:
+    '++id, profileId, title, mealType, createdAt, updatedAt, deletedAt',
+
+  recipeIngredients:
+    '++id, recipeId, ingredientId, variantId, sortOrder',
+
+  recipeDirections:
+    '++id, recipeId, sortOrder',
+
+  recipeAddOns:
+    '++id, recipeId, ingredientId, sortOrder',
+
+  ingredients:
+    '++id, name, isIngredient, isPreparedItem, staple, createdAt, updatedAt',
+
+  ingredientVariants:
+    '++id, ingredientId, name',
+
+  ingredientPackages:
+    '++id, ingredientId, variantId, size, unit, priceType',
+
+  ingredientCategories:
+    '++id, ingredientId, categoryName',
+
+  ingredientConversions:
+    '++id, ingredientId, fromUnit, toUnit',
+
+  ingredientNutrition:
+    '++id, ingredientId, basisType, basisAmount, basisUnit, source',
+
+  tags:
+    '++id, name, createdAt',
+
+  recipeTags:
+    '++id, recipeId, tagId',
+
+  favorites:
+    '++id, profileId, recipeId, createdAt',
+
+  mealPlans:
+    '++id, profileId, name, startDate, endDate, createdAt, updatedAt',
+
+  mealPlanItems:
+    '++id, mealPlanId, recipeId, plannedDate, mealType, status',
+
+  cookingHistory:
+    '++id, profileId, recipeId, cookedAt',
+
+  settings:
+    'key'
+})

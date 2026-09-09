@@ -1913,3 +1913,160 @@ a {
   }
 }
 
+/* =========================================
+   HOME BUTTON / CHIP POLISH
+   ========================================= */
+
+.home-view button {
+  font: inherit;
+}
+
+/* Generic small Home actions:
+   See all, Browse, + New Meal Plan */
+.home-view .section-heading > button,
+.playlist-card > button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  padding: 7px 12px;
+
+  background: var(--surface-soft);
+  color: var(--primary);
+
+  font-size: 0.8rem;
+  font-weight: 800;
+
+  box-shadow: var(--shadow-sm);
+}
+
+.home-view .section-heading > button:hover,
+.playlist-card > button:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* Albums */
+.album-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.album-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  padding: 8px 12px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.album-card strong {
+  font-size: 0.85rem;
+}
+
+.album-card span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.album-card:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* Genres */
+.genre-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.genre-row button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  padding: 8px 12px;
+
+  background: var(--secondary-soft);
+  color: var(--text);
+
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.genre-row button:hover {
+  border-color: var(--secondary);
+}
+
+/* Meal plan empty state */
+.playlist-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 16px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.playlist-card > div {
+  display: grid;
+  gap: 4px;
+}
+
+.playlist-card span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* Empty recently cooked card */
+.empty-card {
+  display: grid;
+  gap: 4px;
+
+  padding: 16px;
+
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+
+  background: var(--surface-soft);
+}
+
+.empty-card span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* Phone spacing */
+@media (max-width: 600px) {
+  .home-view .section-heading > button,
+  .playlist-card > button {
+    padding: 7px 11px;
+  }
+
+  .playlist-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .album-grid,
+  .genre-row {
+    gap: 7px;
+  }
+}
+

@@ -199,6 +199,46 @@ function IngredientDetail({
     )
   }, [ingredient])
 
+  useEffect(() => {
+    const timer = setTimeout(
+      async () => {
+        if (
+          !isIngredient &&
+          !isPreparedItem
+        ) {
+          return
+        }
+
+        await db.ingredients.update(
+          ingredient.id,
+          {
+            name:
+              name.trim() ||
+              ingredient.name,
+
+            staple,
+            isIngredient,
+            isPreparedItem,
+
+            updatedAt:
+              new Date().toISOString(),
+          }
+        )
+      },
+      300
+    )
+
+    return () =>
+      clearTimeout(timer)
+  }, [
+    name,
+    staple,
+    isIngredient,
+    isPreparedItem,
+    ingredient.id,
+    ingredient.name,
+  ])
+
   const highestActualUnitCostByGroup =
     useMemo(() => {
       if (!packages?.length) {
@@ -684,17 +724,10 @@ function IngredientDetail({
     <div className="ingredient-detail">
       <div className="recipe-detail-top">
         <button
-          className="text-button"
+          className="primary-button compact"
           onClick={onBack}
         >
           ← Back
-        </button>
-
-        <button
-          className="primary-button compact"
-          onClick={saveBasics}
-        >
-          Save
         </button>
       </div>
 

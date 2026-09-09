@@ -3,111 +3,201 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
 import { parseIngredientLine } from '../utils/parseIngredient'
 
+function blankSubstitution() {
+  return {
+    ingredientName: '',
+    variantId: null,
+    note: '',
+  }
+}
+
+function blankIngredient() {
+  return {
+    text: '',
+    ingredientName: '',
+    ingredientNameManual: false,
+    variantId: null,
+    substitutions: [],
+    showSubstitutions: false,
+  }
+}
+
 function AddRecipeForm({
   activeProfile,
   recipe = null,
   onSaved,
   onCancel,
 }) {
-  const [title, setTitle] = useState(recipe?.title || '')
-  const [mealType, setMealType] = useState(recipe?.mealType || '')
-  const [servings, setServings] = useState(recipe?.servings || '')
-  const [tags, setTags] = useState('')
-  const [sourceUrl, setSourceUrl] = useState(recipe?.sourceUrl || '')
-  const [notes, setNotes] = useState(recipe?.notes || '')
+  const [title, setTitle] =
+    useState(recipe?.title || '')
 
-  const [ingredients, setIngredients] = useState([
-    {
-      text: '',
-      ingredientName: '',
-      ingredientNameManual: false,
-    },
-  ])
+  const [mealType, setMealType] =
+    useState(recipe?.mealType || '')
 
-  const [directions, setDirections] = useState([
-    { text: '' },
-  ])
+  const [servings, setServings] =
+    useState(recipe?.servings || '')
 
-  const [addOns, setAddOns] = useState([
-    { ingredientName: '' },
-  ])
+  const [tags, setTags] =
+    useState('')
 
-  const masterIngredients = useLiveQuery(
-    () => db.ingredients.orderBy('name').toArray(),
-    []
-  )
+  const [sourceUrl, setSourceUrl] =
+    useState(recipe?.sourceUrl || '')
+
+  const [notes, setNotes] =
+    useState(recipe?.notes || '')
+
+  const [ingredients, setIngredients] =
+    useState([blankIngredient()])
+
+  const [directions, setDirections] =
+    useState([{ text: '' }])
+
+  const [addOns, setAddOns] =
+    useState([{ ingredientName: '' }])
+
+  const masterIngredients =
+    useLiveQuery(
+      () =>
+        db.ingredients
+          .orderBy('name')
+          .toArray(),
+      []
+    )
+
+  const masterVariants =
+    useLiveQuery(
+      () =>
+        db.ingredientVariants
+          .toArray(),
+      []
+    )
 
   useEffect(() => {
     async function loadRecipeData() {
       if (!recipe) return
 
-      const ingredientRows = await db.recipeIngredients
-        .where('recipeId')
-        .equals(recipe.id)
-        .sortBy('sortOrder')
+      const ingredientRows =
+        await db.recipeIngredients
+          .where('recipeId')
+          .equals(recipe.id)
+          .sortBy('sortOrder')
 
-      const loadedIngredients = await Promise.all(
-        ingredientRows.map(async (row) => {
-          const master = row.ingredientId
-            ? await db.ingredients.get(row.ingredientId)
-            : null
+      const loadedIngredients =
+        await Promise.all(
+          ingredientRows.map(
+            async (row) => {
+              const master =
+                row.ingredientId
+                  ? await db.ingredients.get(
+                      row.ingredientId
+                    )
+                  : null
 
-          return {
-            text: row.originalText || '',
-            ingredientName: master?.name || '',
-            ingredientNameManual: Boolean(master?.name),
-          }
-        })
-      )
+              const substitutionRows =
+                await db
+                  .recipeIngredientSubstitutions
+                  .where(
+                    'recipeIngredientId'
+                  )
+                  .equals(row.id)
+                  .sortBy('sortOrder')
 
-      const directionRows = await db.recipeDirections
-        .where('recipeId')
-        .equals(recipe.id)
-        .sortBy('sortOrder')
+              const substitutions =
+                await Promise.all(
+                  substitutionRows.map(
+                    async (sub) => {
+                      const substitute =
+                        sub.substituteIngredientId
+                          ? await db.ingredients.get(
+                              sub.substituteIngredientId
+                            )
+                          : null
 
-      const addOnRows = await db.recipeAddOns
-        .where('recipeId')
-        .equals(recipe.id)
-        .sortBy('sortOrder')
+                      return {
+                        ingredientName:
+                          substitute?.name || '',
+                        variantId:
+                          sub.substituteVariantId ??
+                          null,
+                        note:
+                          sub.note || '',
+                      }
+                    }
+                  )
+                )
 
-      const loadedAddOns = await Promise.all(
-        addOnRows.map(async (row) => {
-          const master = row.ingredientId
-            ? await db.ingredients.get(row.ingredientId)
-            : null
+              return {
+                text:
+                  row.originalText || '',
+                ingredientName:
+                  master?.name || '',
+                ingredientNameManual:
+                  Boolean(master?.name),
+                variantId:
+                  row.variantId ?? null,
+                substitutions,
+                showSubstitutions:
+                  substitutions.length > 0,
+              }
+            }
+          )
+        )
 
-          return {
-            ingredientName: master?.name || '',
-          }
-        })
-      )
+      const directionRows =
+        await db.recipeDirections
+          .where('recipeId')
+          .equals(recipe.id)
+          .sortBy('sortOrder')
 
-      const tagLinks = await db.recipeTags
-        .where('recipeId')
-        .equals(recipe.id)
-        .toArray()
+      const addOnRows =
+        await db.recipeAddOns
+          .where('recipeId')
+          .equals(recipe.id)
+          .sortBy('sortOrder')
 
-      const tagRecords = await Promise.all(
-        tagLinks.map((link) => db.tags.get(link.tagId))
-      )
+      const loadedAddOns =
+        await Promise.all(
+          addOnRows.map(async (row) => {
+            const master =
+              row.ingredientId
+                ? await db.ingredients.get(
+                    row.ingredientId
+                  )
+                : null
+
+            return {
+              ingredientName:
+                master?.name || '',
+            }
+          })
+        )
+
+      const tagLinks =
+        await db.recipeTags
+          .where('recipeId')
+          .equals(recipe.id)
+          .toArray()
+
+      const tagRecords =
+        await Promise.all(
+          tagLinks.map((link) =>
+            db.tags.get(link.tagId)
+          )
+        )
 
       setIngredients(
         loadedIngredients.length
           ? loadedIngredients
-          : [
-              {
-                text: '',
-                ingredientName: '',
-                ingredientNameManual: false,
-              },
-            ]
+          : [blankIngredient()]
       )
 
       setDirections(
         directionRows.length
-          ? directionRows.map((row) => ({
-              text: row.text,
-            }))
+          ? directionRows.map(
+              (row) => ({
+                text: row.text,
+              })
+            )
           : [{ text: '' }]
       )
 
@@ -128,47 +218,200 @@ function AddRecipeForm({
     loadRecipeData()
   }, [recipe])
 
-  function updateIngredient(index, field, value) {
-    const updated = [...ingredients]
+  function findMasterByName(name) {
+    return masterIngredients?.find(
+      (item) =>
+        item.name.toLowerCase() ===
+        name.trim().toLowerCase()
+    )
+  }
 
-    updated[index][field] = value
+  function variantsForName(name) {
+    const master =
+      findMasterByName(name)
 
-    if (field === 'ingredientName') {
-      updated[index].ingredientNameManual = true
-    }
+    if (!master) return []
 
-    if (
-      field === 'text' &&
-      !updated[index].ingredientNameManual
-    ) {
-      const parsed = parseIngredientLine(value)
+    return (
+      masterVariants?.filter(
+        (variant) =>
+          variant.ingredientId ===
+          master.id
+      ) || []
+    )
+  }
 
-      updated[index].ingredientName = parsed.ingredientText
-        .replace(/\b\w/g, (letter) => letter.toUpperCase())
-    }
+  function updateIngredient(
+    index,
+    field,
+    value
+  ) {
+    setIngredients((current) => {
+      const updated =
+        current.map((item) => ({
+          ...item,
+          substitutions:
+            item.substitutions.map(
+              (sub) => ({ ...sub })
+            ),
+        }))
 
-    setIngredients(updated)
+      updated[index][field] = value
+
+      if (field === 'ingredientName') {
+        updated[
+          index
+        ].ingredientNameManual = true
+
+        updated[index].variantId = null
+      }
+
+      if (
+        field === 'text' &&
+        !updated[index]
+          .ingredientNameManual
+      ) {
+        const parsed =
+          parseIngredientLine(value)
+
+        updated[index].ingredientName =
+          parsed.ingredientText.replace(
+            /\b\w/g,
+            (letter) =>
+              letter.toUpperCase()
+          )
+
+        updated[index].variantId = null
+      }
+
+      return updated
+    })
   }
 
   function addIngredient() {
-    setIngredients([
-      ...ingredients,
-      {
-        text: '',
-        ingredientName: '',
-        ingredientNameManual: false,
-      },
+    setIngredients((current) => [
+      ...current,
+      blankIngredient(),
     ])
   }
 
   function removeIngredient(index) {
-    setIngredients(
-      ingredients.filter((_, itemIndex) => itemIndex !== index)
+    setIngredients((current) =>
+      current.filter(
+        (_, itemIndex) =>
+          itemIndex !== index
+      )
     )
   }
 
-  function updateDirection(index, value) {
+  function toggleSubstitutions(index) {
+    setIngredients((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              showSubstitutions:
+                !item.showSubstitutions,
+            }
+          : item
+      )
+    )
+  }
+
+  function addSubstitution(index) {
+    setIngredients((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              showSubstitutions: true,
+              substitutions: [
+                ...item.substitutions,
+                blankSubstitution(),
+              ],
+            }
+          : item
+      )
+    )
+  }
+
+  function updateSubstitution(
+    ingredientIndex,
+    substitutionIndex,
+    field,
+    value
+  ) {
+    setIngredients((current) =>
+      current.map((item, itemIndex) => {
+        if (
+          itemIndex !==
+          ingredientIndex
+        ) {
+          return item
+        }
+
+        const substitutions =
+          item.substitutions.map(
+            (sub, subIndex) => {
+              if (
+                subIndex !==
+                substitutionIndex
+              ) {
+                return sub
+              }
+
+              const updated = {
+                ...sub,
+                [field]: value,
+              }
+
+              if (
+                field ===
+                'ingredientName'
+              ) {
+                updated.variantId =
+                  null
+              }
+
+              return updated
+            }
+          )
+
+        return {
+          ...item,
+          substitutions,
+        }
+      })
+    )
+  }
+
+  function removeSubstitution(
+    ingredientIndex,
+    substitutionIndex
+  ) {
+    setIngredients((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === ingredientIndex
+          ? {
+              ...item,
+              substitutions:
+                item.substitutions.filter(
+                  (_, subIndex) =>
+                    subIndex !==
+                    substitutionIndex
+                ),
+            }
+          : item
+      )
+    )
+  }
+
+  function updateDirection(
+    index,
+    value
+  ) {
     const updated = [...directions]
+
     updated[index].text = value
     setDirections(updated)
   }
@@ -182,13 +425,19 @@ function AddRecipeForm({
 
   function removeDirection(index) {
     setDirections(
-      directions.filter((_, itemIndex) => itemIndex !== index)
+      directions.filter(
+        (_, itemIndex) =>
+          itemIndex !== index
+      )
     )
   }
 
   function updateAddOn(index, value) {
     const updated = [...addOns]
-    updated[index].ingredientName = value
+
+    updated[index].ingredientName =
+      value
+
     setAddOns(updated)
   }
 
@@ -201,83 +450,137 @@ function AddRecipeForm({
 
   function removeAddOn(index) {
     setAddOns(
-      addOns.filter((_, itemIndex) => itemIndex !== index)
+      addOns.filter(
+        (_, itemIndex) =>
+          itemIndex !== index
+      )
     )
   }
 
-  async function findOrCreateIngredient(name, itemType = 'ingredient') {
+  async function findOrCreateIngredient(
+    name,
+    itemType = 'ingredient'
+  ) {
     const cleanedName = name.trim()
+
     if (!cleanedName) return null
 
-    const existing = await db.ingredients
-      .filter(
-        (item) =>
-          item.name.toLowerCase() === cleanedName.toLowerCase()
-      )
-      .first()
+    const existing =
+      await db.ingredients
+        .filter(
+          (item) =>
+            item.name.toLowerCase() ===
+            cleanedName.toLowerCase()
+        )
+        .first()
 
     if (existing) {
-  if (
-    itemType === 'ingredient' &&
-    existing.isIngredient !== true
-  ) {
-    await db.ingredients.update(existing.id, {
-      isIngredient: true,
-      updatedAt: new Date().toISOString(),
-    })
-  }
+      if (
+        itemType === 'ingredient' &&
+        existing.isIngredient !== true
+      ) {
+        await db.ingredients.update(
+          existing.id,
+          {
+            isIngredient: true,
+            updatedAt:
+              new Date().toISOString(),
+          }
+        )
+      }
 
-  if (
-    itemType === 'prepared' &&
-    existing.isPreparedItem !== true
-  ) {
-    await db.ingredients.update(existing.id, {
-      isPreparedItem: true,
-      updatedAt: new Date().toISOString(),
-    })
-  }
+      if (
+        itemType === 'prepared' &&
+        existing.isPreparedItem !== true
+      ) {
+        await db.ingredients.update(
+          existing.id,
+          {
+            isPreparedItem: true,
+            updatedAt:
+              new Date().toISOString(),
+          }
+        )
+      }
 
-  return existing.id
-}
+      return existing.id
+    }
 
-    const now = new Date().toISOString()
+    const now =
+      new Date().toISOString()
 
     return db.ingredients.add({
       name: cleanedName,
       staple: false,
-      isIngredient: itemType === 'ingredient',
-      isPreparedItem: itemType === 'prepared',
+      isIngredient:
+        itemType === 'ingredient',
+      isPreparedItem:
+        itemType === 'prepared',
       createdAt: now,
       updatedAt: now,
     })
-      }
+  }
+
+  async function deleteOldRecipeIngredients(
+    recipeId
+  ) {
+    const oldRows =
+      await db.recipeIngredients
+        .where('recipeId')
+        .equals(recipeId)
+        .toArray()
+
+    for (const row of oldRows) {
+      await db
+        .recipeIngredientSubstitutions
+        .where('recipeIngredientId')
+        .equals(row.id)
+        .delete()
+    }
+
+    await db.recipeIngredients
+      .where('recipeId')
+      .equals(recipeId)
+      .delete()
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const trimmedTitle = title.trim()
+    const trimmedTitle =
+      title.trim()
+
     if (!trimmedTitle) return
 
-    const now = new Date().toISOString()
+    const now =
+      new Date().toISOString()
 
     let recipeId
 
     if (recipe) {
       recipeId = recipe.id
 
-      await db.recipes.update(recipeId, {
-        title: trimmedTitle,
-        mealType: mealType || null,
-        servings: servings ? Number(servings) : null,
-        sourceUrl: sourceUrl.trim() || null,
-        notes: notes.trim() || null,
-        updatedAt: now,
-      })
+      await db.recipes.update(
+        recipeId,
+        {
+          title: trimmedTitle,
+          mealType:
+            mealType || null,
+          servings: servings
+            ? Number(servings)
+            : null,
+          sourceUrl:
+            sourceUrl.trim() ||
+            null,
+          notes:
+            notes.trim() || null,
+          updatedAt: now,
+        }
+      )
 
-      await db.recipeIngredients
-        .where('recipeId')
-        .equals(recipeId)
-        .delete()
+      await deleteOldRecipeIngredients(
+        recipeId
+      )
 
       await db.recipeDirections
         .where('recipeId')
@@ -294,73 +597,147 @@ function AddRecipeForm({
         .equals(recipeId)
         .delete()
     } else {
-      recipeId = await db.recipes.add({
-        profileId: activeProfile.id,
-        title: trimmedTitle,
-        mealType: mealType || null,
-        servings: servings ? Number(servings) : null,
-        sourceUrl: sourceUrl.trim() || null,
-        notes: notes.trim() || null,
-        createdAt: now,
-        updatedAt: now,
-        deletedAt: null,
-      })
+      recipeId =
+        await db.recipes.add({
+          profileId:
+            activeProfile.id,
+          title: trimmedTitle,
+          mealType:
+            mealType || null,
+          servings: servings
+            ? Number(servings)
+            : null,
+          sourceUrl:
+            sourceUrl.trim() ||
+            null,
+          notes:
+            notes.trim() || null,
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+        })
     }
 
-    const cleanIngredients = ingredients
-      .map((item) => ({
-        text: item.text.trim(),
-        ingredientName: item.ingredientName.trim(),
-      }))
-      .filter((item) => item.text)
+    const cleanIngredients =
+      ingredients.filter(
+        (item) => item.text.trim()
+      )
 
-    for (let index = 0; index < cleanIngredients.length; index++) {
-      const item = cleanIngredients[index]
+    for (
+      let index = 0;
+      index < cleanIngredients.length;
+      index++
+    ) {
+      const item =
+        cleanIngredients[index]
 
-      const ingredientId = item.ingredientName
-        ? await findOrCreateIngredient(
-            item.ingredientName,
+      const ingredientId =
+        item.ingredientName.trim()
+          ? await findOrCreateIngredient(
+              item.ingredientName,
+              'ingredient'
+            )
+          : null
+
+      const parsed =
+        parseIngredientLine(
+          item.text.trim()
+        )
+
+      const recipeIngredientId =
+        await db.recipeIngredients.add({
+          recipeId,
+          originalText:
+            item.text.trim(),
+          quantity:
+            parsed.quantity,
+          unit: parsed.unit,
+          parsedIngredientText:
+            parsed.ingredientText,
+          ingredientId,
+          variantId:
+            item.variantId
+              ? Number(item.variantId)
+              : null,
+          sortOrder: index,
+        })
+
+      const cleanSubs =
+        item.substitutions.filter(
+          (sub) =>
+            sub.ingredientName.trim()
+        )
+
+      for (
+        let subIndex = 0;
+        subIndex < cleanSubs.length;
+        subIndex++
+      ) {
+        const sub =
+          cleanSubs[subIndex]
+
+        const substituteIngredientId =
+          await findOrCreateIngredient(
+            sub.ingredientName,
             'ingredient'
           )
-        : null
 
-      const parsed = parseIngredientLine(item.text)
-
-      await db.recipeIngredients.add({
-        recipeId,
-        originalText: item.text,
-        quantity: parsed.quantity,
-        unit: parsed.unit,
-        parsedIngredientText: parsed.ingredientText,
-        ingredientId,
-        variantId: null,
-        sortOrder: index,
-      })
+        await db
+          .recipeIngredientSubstitutions
+          .add({
+            recipeIngredientId,
+            substituteIngredientId,
+            substituteVariantId:
+              sub.variantId
+                ? Number(
+                    sub.variantId
+                  )
+                : null,
+            note:
+              sub.note.trim() ||
+              null,
+            sortOrder: subIndex,
+          })
+      }
     }
 
-    const cleanDirections = directions
-      .map((item) => item.text.trim())
-      .filter(Boolean)
+    const cleanDirections =
+      directions
+        .map((item) =>
+          item.text.trim()
+        )
+        .filter(Boolean)
 
-    for (let index = 0; index < cleanDirections.length; index++) {
+    for (
+      let index = 0;
+      index < cleanDirections.length;
+      index++
+    ) {
       await db.recipeDirections.add({
         recipeId,
-        text: cleanDirections[index],
+        text:
+          cleanDirections[index],
         sortOrder: index,
       })
     }
 
-    const cleanAddOns = addOns
-      .map((item) => item.ingredientName.trim())
-      .filter(Boolean)
+    const cleanAddOns =
+      addOns
+        .map((item) =>
+          item.ingredientName.trim()
+        )
+        .filter(Boolean)
 
-    for (let index = 0; index < cleanAddOns.length; index++) {
-      const addOnName = cleanAddOns[index]
-
-      const ingredientId = await findOrCreateIngredient(
-        addOnName,
-        'prepared'
-      )
+    for (
+      let index = 0;
+      index < cleanAddOns.length;
+      index++
+    ) {
+      const ingredientId =
+        await findOrCreateIngredient(
+          cleanAddOns[index],
+          'prepared'
+        )
 
       await db.recipeAddOns.add({
         recipeId,
@@ -369,28 +746,32 @@ function AddRecipeForm({
       })
     }
 
-    const tagNames = tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean)
+    const tagNames =
+      tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
 
     for (const tagName of tagNames) {
-      let tag = await db.tags
-        .filter(
-          (item) =>
-            item.name.toLowerCase() === tagName.toLowerCase()
-        )
-        .first()
+      let tag =
+        await db.tags
+          .filter(
+            (item) =>
+              item.name.toLowerCase() ===
+              tagName.toLowerCase()
+          )
+          .first()
 
       let tagId
 
       if (tag) {
         tagId = tag.id
       } else {
-        tagId = await db.tags.add({
-          name: tagName,
-          createdAt: now,
-        })
+        tagId =
+          await db.tags.add({
+            name: tagName,
+            createdAt: now,
+          })
       }
 
       await db.recipeTags.add({
@@ -403,15 +784,22 @@ function AddRecipeForm({
   }
 
   return (
-    <form className="recipe-form" onSubmit={handleSubmit}>
+    <form
+      className="recipe-form"
+      onSubmit={handleSubmit}
+    >
       <div className="form-heading">
         <div>
           <p className="eyebrow">
-            {recipe ? 'Editing recipe' : 'New recipe'}
+            {recipe
+              ? 'Editing recipe'
+              : 'New recipe'}
           </p>
 
           <h2>
-            {recipe ? 'Edit Recipe' : 'Add Recipe'}
+            {recipe
+              ? 'Edit Recipe'
+              : 'Add Recipe'}
           </h2>
         </div>
 
@@ -430,7 +818,11 @@ function AddRecipeForm({
         <input
           type="text"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) =>
+            setTitle(
+              event.target.value
+            )
+          }
           placeholder="Sloppy Joes"
         />
       </label>
@@ -440,16 +832,36 @@ function AddRecipeForm({
 
         <select
           value={mealType}
-          onChange={(event) => setMealType(event.target.value)}
+          onChange={(event) =>
+            setMealType(
+              event.target.value
+            )
+          }
         >
-          <option value="">Choose meal type</option>
-          <option value="Breakfast">Breakfast</option>
-          <option value="Lunch">Lunch</option>
-          <option value="Dinner">Dinner</option>
-          <option value="Side">Side</option>
-          <option value="Dessert">Dessert</option>
-          <option value="Snack">Snack</option>
-          <option value="Drink">Drink</option>
+          <option value="">
+            Choose meal type
+          </option>
+          <option value="Breakfast">
+            Breakfast
+          </option>
+          <option value="Lunch">
+            Lunch
+          </option>
+          <option value="Dinner">
+            Dinner
+          </option>
+          <option value="Side">
+            Side
+          </option>
+          <option value="Dessert">
+            Dessert
+          </option>
+          <option value="Snack">
+            Snack
+          </option>
+          <option value="Drink">
+            Drink
+          </option>
         </select>
       </label>
 
@@ -460,7 +872,11 @@ function AddRecipeForm({
           type="number"
           min="1"
           value={servings}
-          onChange={(event) => setServings(event.target.value)}
+          onChange={(event) =>
+            setServings(
+              event.target.value
+            )
+          }
           placeholder="4"
         />
       </label>
@@ -478,66 +894,324 @@ function AddRecipeForm({
           </button>
         </div>
 
-        {ingredients.map((ingredient, index) => (
-          <div className="ingredient-editor" key={index}>
-            <input
-              type="text"
-              value={ingredient.text}
-              onChange={(event) =>
-                updateIngredient(
-                  index,
-                  'text',
-                  event.target.value
-                )
-              }
-              placeholder="2 tbsp peanut butter"
-            />
+        {ingredients.map(
+          (ingredient, index) => {
+            const variants =
+              variantsForName(
+                ingredient.ingredientName
+              )
 
-            <div className="ingredient-link-row">
-              <input
-                type="text"
-                list="master-ingredients"
-                value={ingredient.ingredientName}
-                onChange={(event) =>
-                  updateIngredient(
-                    index,
-                    'ingredientName',
-                    event.target.value
-                  )
-                }
-                placeholder="Linked ingredient"
-              />
+            return (
+              <div
+                className="ingredient-editor"
+                key={index}
+              >
+                <input
+                  type="text"
+                  value={
+                    ingredient.text
+                  }
+                  onChange={(event) =>
+                    updateIngredient(
+                      index,
+                      'text',
+                      event.target.value
+                    )
+                  }
+                  placeholder="2 tbsp peanut butter"
+                />
 
-              {ingredients.length > 1 && (
-                <button
-                  type="button"
-                  className="remove-row-button"
-                  onClick={() => removeIngredient(index)}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+                <div className="linked-ingredient-line">
+                  <span className="linked-ingredient-badge">
+                    <span>Linked</span>
+                    <span>Ingredient</span>
+                  </span>
+
+                  <input
+                    type="text"
+                    list="master-ingredients"
+                    value={
+                      ingredient.ingredientName
+                    }
+                    onChange={(event) =>
+                      updateIngredient(
+                        index,
+                        'ingredientName',
+                        event.target.value
+                      )
+                    }
+                    placeholder="Peanut Butter"
+                  />
+
+                  {ingredients.length >
+                    1 && (
+                    <button
+                      type="button"
+                      className="remove-row-button"
+                      onClick={() =>
+                        removeIngredient(
+                          index
+                        )
+                      }
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {variants.length > 0 && (
+                  <div className="variant-default-row">
+                    <span>
+                      Default variety
+                    </span>
+
+                    <select
+                      value={
+                        ingredient.variantId ||
+                        ''
+                      }
+                      onChange={(event) =>
+                        updateIngredient(
+                          index,
+                          'variantId',
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="">
+                        Base / unspecified
+                      </option>
+
+                      {variants.map(
+                        (variant) => (
+                          <option
+                            key={
+                              variant.id
+                            }
+                            value={
+                              variant.id
+                            }
+                          >
+                            {
+                              variant.name
+                            }
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+                )}
+
+                <div className="substitution-editor-row">
+                  <button
+                    type="button"
+                    className="quiet-pill-button"
+                    onClick={() =>
+                      toggleSubstitutions(
+                        index
+                      )
+                    }
+                  >
+                    Substitutions
+                    {ingredient
+                      .substitutions
+                      .length > 0
+                      ? ` (${ingredient.substitutions.length})`
+                      : ''}
+                  </button>
+                </div>
+
+                {ingredient.showSubstitutions && (
+                  <div className="substitution-editor-panel">
+                    <div className="substitution-panel-heading">
+                      <div>
+                        <strong>
+                          Allowed
+                          substitutions
+                        </strong>
+
+                        <span>
+                          Optional
+                          alternatives for
+                          this recipe only.
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="text-button"
+                        onClick={() =>
+                          addSubstitution(
+                            index
+                          )
+                        }
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {!ingredient
+                      .substitutions
+                      .length && (
+                      <div className="empty-substitution-note">
+                        No substitutions
+                        added.
+                      </div>
+                    )}
+
+                    {ingredient.substitutions.map(
+                      (
+                        substitution,
+                        subIndex
+                      ) => {
+                        const subVariants =
+                          variantsForName(
+                            substitution.ingredientName
+                          )
+
+                        return (
+                          <div
+                            className="substitution-editor-item"
+                            key={
+                              subIndex
+                            }
+                          >
+                            <div className="substitution-main-row">
+                              <input
+                                type="text"
+                                list="master-ingredients"
+                                value={
+                                  substitution.ingredientName
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateSubstitution(
+                                    index,
+                                    subIndex,
+                                    'ingredientName',
+                                    event
+                                      .target
+                                      .value
+                                  )
+                                }
+                                placeholder="Margarine, Jam, Banana..."
+                              />
+
+                              <button
+                                type="button"
+                                className="remove-row-button"
+                                onClick={() =>
+                                  removeSubstitution(
+                                    index,
+                                    subIndex
+                                  )
+                                }
+                              >
+                                ×
+                              </button>
+                            </div>
+
+                            {subVariants.length >
+                              0 && (
+                              <select
+                                value={
+                                  substitution.variantId ||
+                                  ''
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateSubstitution(
+                                    index,
+                                    subIndex,
+                                    'variantId',
+                                    event
+                                      .target
+                                      .value
+                                  )
+                                }
+                              >
+                                <option value="">
+                                  Any / base
+                                  variety
+                                </option>
+
+                                {subVariants.map(
+                                  (
+                                    variant
+                                  ) => (
+                                    <option
+                                      key={
+                                        variant.id
+                                      }
+                                      value={
+                                        variant.id
+                                      }
+                                    >
+                                      {
+                                        variant.name
+                                      }
+                                    </option>
+                                  )
+                                )}
+                              </select>
+                            )}
+
+                            <input
+                              type="text"
+                              value={
+                                substitution.note
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                updateSubstitution(
+                                  index,
+                                  subIndex,
+                                  'note',
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+                              placeholder="Optional note, e.g. use equal amount"
+                            />
+                          </div>
+                        )
+                      }
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          }
+        )}
 
         <datalist id="master-ingredients">
-          {masterIngredients?.map((ingredient) => (
-            <option
-              key={ingredient.id}
-              value={ingredient.name}
-            />
-          ))}
+          {masterIngredients?.map(
+            (ingredient) => (
+              <option
+                key={ingredient.id}
+                value={ingredient.name}
+              />
+            )
+          )}
         </datalist>
       </div>
 
       <div className="form-section">
         <div className="section-heading">
           <div>
-            <h3>Suggested Sides</h3>
+            <h3>
+              Suggested Sides
+            </h3>
+
             <p className="field-help">
-              Optional prepared items such as fries, chips,
-              garlic bread, or bagged salad.
+              Optional prepared items
+              such as fries, chips,
+              garlic bread, or bagged
+              salad.
             </p>
           </div>
 
@@ -550,29 +1224,41 @@ function AddRecipeForm({
           </button>
         </div>
 
-        {addOns.map((addOn, index) => (
-          <div className="dynamic-row" key={index}>
-            <input
-              type="text"
-              list="master-ingredients"
-              value={addOn.ingredientName}
-              onChange={(event) =>
-                updateAddOn(index, event.target.value)
-              }
-              placeholder="Garlic Bread"
-            />
+        {addOns.map(
+          (addOn, index) => (
+            <div
+              className="dynamic-row"
+              key={index}
+            >
+              <input
+                type="text"
+                list="master-ingredients"
+                value={
+                  addOn.ingredientName
+                }
+                onChange={(event) =>
+                  updateAddOn(
+                    index,
+                    event.target.value
+                  )
+                }
+                placeholder="Garlic Bread"
+              />
 
-            {addOns.length > 1 && (
-              <button
-                type="button"
-                className="remove-row-button"
-                onClick={() => removeAddOn(index)}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+              {addOns.length > 1 && (
+                <button
+                  type="button"
+                  className="remove-row-button"
+                  onClick={() =>
+                    removeAddOn(index)
+                  }
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )
+        )}
       </div>
 
       <div className="form-section">
@@ -588,35 +1274,47 @@ function AddRecipeForm({
           </button>
         </div>
 
-        {directions.map((direction, index) => (
-          <div className="dynamic-row" key={index}>
-            <div className="step-number">
-              {index + 1}
+        {directions.map(
+          (direction, index) => (
+            <div
+              className="dynamic-row"
+              key={index}
+            >
+              <div className="step-number">
+                {index + 1}
+              </div>
+
+              <textarea
+                rows="2"
+                value={
+                  direction.text
+                }
+                onChange={(event) =>
+                  updateDirection(
+                    index,
+                    event.target.value
+                  )
+                }
+                placeholder="Describe this step..."
+              />
+
+              {directions.length >
+                1 && (
+                <button
+                  type="button"
+                  className="remove-row-button"
+                  onClick={() =>
+                    removeDirection(
+                      index
+                    )
+                  }
+                >
+                  ×
+                </button>
+              )}
             </div>
-
-            <textarea
-              rows="2"
-              value={direction.text}
-              onChange={(event) =>
-                updateDirection(
-                  index,
-                  event.target.value
-                )
-              }
-              placeholder="Describe this step..."
-            />
-
-            {directions.length > 1 && (
-              <button
-                type="button"
-                className="remove-row-button"
-                onClick={() => removeDirection(index)}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+          )
+        )}
       </div>
 
       <label>
@@ -625,7 +1323,11 @@ function AddRecipeForm({
         <input
           type="text"
           value={tags}
-          onChange={(event) => setTags(event.target.value)}
+          onChange={(event) =>
+            setTags(
+              event.target.value
+            )
+          }
           placeholder="Ground Beef, Party Food, Instant Pot"
         />
       </label>
@@ -636,7 +1338,11 @@ function AddRecipeForm({
         <input
           type="url"
           value={sourceUrl}
-          onChange={(event) => setSourceUrl(event.target.value)}
+          onChange={(event) =>
+            setSourceUrl(
+              event.target.value
+            )
+          }
           placeholder="https://..."
         />
       </label>
@@ -645,19 +1351,33 @@ function AddRecipeForm({
         Track Notes
 
         <textarea
-          rows="4"
           value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="Anything you want to remember..."
+          onChange={(event) =>
+            setNotes(
+              event.target.value
+            )
+          }
+          placeholder="Family notes, changes, reminders..."
         />
       </label>
 
-      <button
-        className="primary-button"
-        type="submit"
-      >
-        Save Recipe
-      </button>
+      <div className="recipe-action-row">
+        <button
+          type="submit"
+          className="primary-button"
+        >
+          {recipe
+            ? 'Save Changes'
+            : 'Add Recipe'}
+        </button>
+
+        <button
+          type="button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   )
 }

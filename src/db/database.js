@@ -2,7 +2,7 @@ import Dexie from 'dexie'
 
 export const db = new Dexie('FamilyRecipesDB')
 
-db.version(8).stores({
+db.version(9).stores({
   profiles:
     '++id, name, createdAt, updatedAt',
 
@@ -11,6 +11,9 @@ db.version(8).stores({
 
   recipeIngredients:
     '++id, recipeId, ingredientId, variantId, sortOrder',
+
+  recipeIngredientSubstitutions:
+    '++id, recipeIngredientId, substituteIngredientId, substituteVariantId, sortOrder',
 
   recipeDirections:
     '++id, recipeId, sortOrder',
@@ -31,10 +34,10 @@ db.version(8).stores({
     '++id, ingredientId, categoryName',
 
   ingredientConversions:
-    '++id, ingredientId, fromUnit, toUnit',
+    '++id, ingredientId, variantId, fromUnit, toUnit',
 
   ingredientNutrition:
-    '++id, ingredientId, basisType, basisAmount, basisUnit, source',
+    '++id, ingredientId, variantId, basisType, basisAmount, basisUnit, source',
 
   tags:
     '++id, name, createdAt',

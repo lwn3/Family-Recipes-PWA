@@ -2070,3 +2070,164 @@ a {
   }
 }
 
+/* =========================================
+   LINKED INGREDIENT + VARIANTS
+   ========================================= */
+
+.ingredient-editor {
+  display: grid;
+  gap: 8px;
+
+  padding: 12px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  background: var(--surface-soft);
+}
+
+.linked-ingredient-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+
+  gap: 7px;
+  align-items: stretch;
+}
+
+.linked-ingredient-badge {
+  min-width: 62px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding: 2px 7px;
+
+  border-radius: var(--radius-sm);
+
+  background: var(--primary);
+  color: white;
+
+  font-size: 0.58rem;
+  font-weight: 800;
+
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.linked-ingredient-line input {
+  min-width: 0;
+}
+
+.variant-default-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+
+  gap: 8px;
+  align-items: center;
+}
+
+.variant-default-row > span {
+  color: var(--text-muted);
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.variant-default-row select {
+  width: 100%;
+}
+
+
+/* =========================================
+   RECIPE SUBSTITUTIONS
+   ========================================= */
+
+.substitution-editor-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.quiet-pill-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  padding: 6px 10px;
+
+  background: var(--surface);
+  color: var(--text-muted);
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.quiet-pill-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.substitution-editor-panel {
+  display: grid;
+  gap: 9px;
+
+  padding: 11px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  background: var(--surface);
+}
+
+.substitution-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.substitution-panel-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.substitution-panel-heading span,
+.empty-substitution-note {
+  color: var(--text-muted);
+
+  font-size: 0.72rem;
+}
+
+.substitution-editor-item {
+  display: grid;
+  gap: 7px;
+
+  padding-top: 9px;
+
+  border-top: 1px solid var(--border);
+}
+
+.substitution-main-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+
+  gap: 7px;
+}
+
+
+/* Phone */
+@media (max-width: 600px) {
+  .linked-ingredient-badge {
+    min-width: 58px;
+
+    font-size: 0.54rem;
+  }
+
+  .variant-default-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+

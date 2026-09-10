@@ -1,3 +1,5 @@
+import { splitIngredientNote } from './parseIngredient'
+
 const unicodeFractions = [
   { value: 0.125, text: '⅛' },
   { value: 0.25, text: '¼' },
@@ -21,177 +23,65 @@ export function formatQuantity(value) {
   const whole = Math.floor(rounded)
   const decimal = rounded - whole
 
-  if (nearlyEqual(decimal, 0)) {
-    return String(whole)
-  }
+  if (nearlyEqual(decimal, 0)) return String(whole)
 
-  const fraction = unicodeFractions.find((item) =>
-    nearlyEqual(decimal, item.value)
-  )
+  const fraction = unicodeFractions.find((item) => nearlyEqual(decimal, item.value))
 
   if (fraction) {
-    return whole > 0
-      ? `${whole}${fraction.text}`
-      : fraction.text
+    return whole > 0 ? `${whole}${fraction.text}` : fraction.text
   }
 
   return String(Math.round(rounded * 100) / 100)
 }
 
 function convertToMetric(quantity, unit) {
-  if (quantity == null || !unit) {
-    return { quantity, unit }
-  }
+  if (quantity == null || !unit) return { quantity, unit }
 
   switch (unit) {
-    case 'tsp':
-      return {
-        quantity: quantity * 4.92892,
-        unit: 'ml',
-      }
-
-    case 'tbsp':
-      return {
-        quantity: quantity * 14.7868,
-        unit: 'ml',
-      }
-
-    case 'cup':
-      return {
-        quantity: quantity * 236.588,
-        unit: 'ml',
-      }
-
-    case 'oz':
-      return {
-        quantity: quantity * 28.3495,
-        unit: 'g',
-      }
-
-    case 'lb':
-      return {
-        quantity: quantity * 453.592,
-        unit: 'g',
-      }
-
-    default:
-      return { quantity, unit }
+    case 'tsp': return { quantity: quantity * 4.92892, unit: 'ml' }
+    case 'tbsp': return { quantity: quantity * 14.7868, unit: 'ml' }
+    case 'cup': return { quantity: quantity * 236.588, unit: 'ml' }
+    case 'oz': return { quantity: quantity * 28.3495, unit: 'g' }
+    case 'lb': return { quantity: quantity * 453.592, unit: 'g' }
+    default: return { quantity, unit }
   }
 }
 
 function convertToUS(quantity, unit) {
-  if (quantity == null || !unit) {
-    return { quantity, unit }
-  }
+  if (quantity == null || !unit) return { quantity, unit }
 
   switch (unit) {
     case 'ml':
-      if (quantity >= 236.588) {
-        return {
-          quantity: quantity / 236.588,
-          unit: 'cup',
-        }
-      }
-
-      if (quantity >= 14.7868) {
-        return {
-          quantity: quantity / 14.7868,
-          unit: 'tbsp',
-        }
-      }
-
-      return {
-        quantity: quantity / 4.92892,
-        unit: 'tsp',
-      }
-
-    case 'l':
-      return {
-        quantity: quantity * 4.22675,
-        unit: 'cup',
-      }
-
+      if (quantity >= 236.588) return { quantity: quantity / 236.588, unit: 'cup' }
+      if (quantity >= 14.7868) return { quantity: quantity / 14.7868, unit: 'tbsp' }
+      return { quantity: quantity / 4.92892, unit: 'tsp' }
+    case 'l': return { quantity: quantity * 4.22675, unit: 'cup' }
     case 'g':
-      if (quantity >= 453.592) {
-        return {
-          quantity: quantity / 453.592,
-          unit: 'lb',
-        }
-      }
-
-      return {
-        quantity: quantity / 28.3495,
-        unit: 'oz',
-      }
-
-    case 'kg':
-      return {
-        quantity: quantity * 2.20462,
-        unit: 'lb',
-      }
-
-    default:
-      return { quantity, unit }
+      if (quantity >= 453.592) return { quantity: quantity / 453.592, unit: 'lb' }
+      return { quantity: quantity / 28.3495, unit: 'oz' }
+    case 'kg': return { quantity: quantity * 2.20462, unit: 'lb' }
+    default: return { quantity, unit }
   }
 }
 
 function normalizeMetric(quantity, unit) {
-  if (quantity == null || !unit) {
-    return { quantity, unit }
-  }
-
-  if (unit === 'ml' && quantity >= 1000) {
-    return {
-      quantity: quantity / 1000,
-      unit: 'l',
-    }
-  }
-
-  if (unit === 'g' && quantity >= 1000) {
-    return {
-      quantity: quantity / 1000,
-      unit: 'kg',
-    }
-  }
-
+  if (quantity == null || !unit) return { quantity, unit }
+  if (unit === 'ml' && quantity >= 1000) return { quantity: quantity / 1000, unit: 'l' }
+  if (unit === 'g' && quantity >= 1000) return { quantity: quantity / 1000, unit: 'kg' }
   return { quantity, unit }
 }
 
 function normalizeUS(quantity, unit) {
-  if (quantity == null || !unit) {
-    return { quantity, unit }
-  }
+  if (quantity == null || !unit) return { quantity, unit }
 
   if (unit === 'tsp' && quantity >= 3) {
     const tbsp = quantity / 3
-
-    if (tbsp >= 4) {
-      return {
-        quantity: tbsp / 16,
-        unit: 'cup',
-      }
-    }
-
-    return {
-      quantity: tbsp,
-      unit: 'tbsp',
-    }
+    if (tbsp >= 4) return { quantity: tbsp / 16, unit: 'cup' }
+    return { quantity: tbsp, unit: 'tbsp' }
   }
 
-  if (unit === 'tbsp' && quantity >= 4) {
-    return {
-      quantity: quantity / 16,
-      unit: 'cup',
-    }
-  }
-
-  if (unit === 'oz' && quantity >= 16) {
-    return {
-      quantity: quantity / 16,
-      unit: 'lb',
-    }
-  }
-
+  if (unit === 'tbsp' && quantity >= 4) return { quantity: quantity / 16, unit: 'cup' }
+  if (unit === 'oz' && quantity >= 16) return { quantity: quantity / 16, unit: 'lb' }
   return { quantity, unit }
 }
 
@@ -199,22 +89,16 @@ export function displayUnit(unit, quantity) {
   if (!unit) return ''
 
   const plural = quantity !== 1
-
   const labels = {
     tsp: 'tsp',
     tbsp: 'tbsp',
-
     cup: plural ? 'cups' : 'cup',
-
     oz: 'oz',
     lb: 'lb',
-
     g: 'g',
     kg: 'kg',
-
     ml: 'ml',
     l: 'L',
-
     can: plural ? 'cans' : 'can',
     package: plural ? 'packages' : 'package',
     slice: plural ? 'slices' : 'slice',
@@ -225,17 +109,19 @@ export function displayUnit(unit, quantity) {
   return labels[unit] || unit
 }
 
-export function scaleIngredient(
-  item,
-  scaleFactor,
-  measurementSystem = 'original'
-) {
+function ingredientTextWithNote(item) {
+  const inferred = splitIngredientNote(item.originalText || '')
+  const base = item.parsedIngredientText || inferred.ingredientLine || item.originalText
+  const note = item.note || inferred.note
+  return note ? `${base}, ${note}` : base
+}
+
+export function scaleIngredient(item, scaleFactor, measurementSystem = 'original') {
   if (item.quantity == null) {
     return {
       quantityText: '',
       unitText: '',
-      ingredientText:
-        item.parsedIngredientText || item.originalText,
+      ingredientText: ingredientTextWithNote(item),
       scalable: false,
     }
   }
@@ -265,10 +151,7 @@ export function scaleIngredient(
 
   if (measurementSystem === 'original') {
     const normalized =
-      unit === 'ml' ||
-      unit === 'l' ||
-      unit === 'g' ||
-      unit === 'kg'
+      unit === 'ml' || unit === 'l' || unit === 'g' || unit === 'kg'
         ? normalizeMetric(quantity, unit)
         : normalizeUS(quantity, unit)
 
@@ -279,8 +162,7 @@ export function scaleIngredient(
   return {
     quantityText: formatQuantity(quantity),
     unitText: displayUnit(unit, quantity),
-    ingredientText:
-      item.parsedIngredientText || item.originalText,
+    ingredientText: ingredientTextWithNote(item),
     scalable: true,
   }
 }

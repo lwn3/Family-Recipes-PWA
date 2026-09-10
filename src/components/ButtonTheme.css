@@ -1,0 +1,73 @@
+/* App-wide fallback button styling.
+   Specific component button classes can still override this. */
+button {
+  font: inherit;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primary-button {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  box-shadow: none;
+}
+
+.primary-button:hover:not(:disabled) {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+}
+
+.text-button,
+.profile-button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.text-button:hover:not(:disabled),
+.profile-button:hover:not(:disabled) {
+  background: transparent;
+}
+
+.recipe-remove-button,
+.danger-button {
+  border: 1px solid #ddb9b9;
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  box-shadow: none;
+  font-weight: 800;
+}
+
+.recipe-remove-button:hover:not(:disabled),
+.danger-button:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: #f1dddd;
+}

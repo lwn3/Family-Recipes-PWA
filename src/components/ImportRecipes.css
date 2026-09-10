@@ -1,0 +1,230 @@
+.recipe-importer {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.import-upload-card,
+.import-summary-card,
+.import-preview-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.import-upload-card {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.import-upload-card p {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.import-file-button {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.import-file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.import-file-name,
+.import-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.import-error {
+  padding: 12px 14px;
+  border: 1px solid #e3bcbc;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.84rem;
+}
+
+.import-summary-card {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.import-summary-card > div {
+  padding: 14px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+
+.import-summary-card > div:last-child {
+  border-right: 0;
+}
+
+.import-summary-card strong {
+  display: block;
+  color: var(--primary);
+  font-size: 1.25rem;
+}
+
+.import-summary-card span {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.import-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.import-toolbar > div {
+  display: flex;
+  gap: 12px;
+}
+
+.import-preview-list {
+  display: grid;
+  gap: 10px;
+}
+
+.import-preview-card {
+  overflow: hidden;
+}
+
+.import-preview-main {
+  padding: 13px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.import-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.import-preview-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.import-preview-copy > strong {
+  line-height: 1.25;
+}
+
+.import-preview-copy > span {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.import-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.import-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.import-badge.warning {
+  background: #fff2d8;
+  color: #8a5a00;
+}
+
+.import-badge.duplicate {
+  background: #f2e9df;
+  color: #765235;
+}
+
+.import-expanded {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-soft);
+  display: grid;
+  gap: 14px;
+}
+
+.import-expanded p,
+.import-expanded ul,
+.import-expanded ol {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.import-expanded ul,
+.import-expanded ol {
+  padding-left: 20px;
+}
+
+@media (max-width: 700px) {
+  .import-upload-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .import-file-button {
+    text-align: center;
+  }
+
+  .import-summary-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .import-summary-card > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .import-summary-card > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .import-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .import-toolbar > .primary-button {
+    width: 100%;
+  }
+
+  .import-preview-main {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .import-preview-main > .text-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

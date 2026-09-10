@@ -3,12 +3,13 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
 import AddRecipeForm from './AddRecipeForm'
 import RecipeDetail from './RecipeDetail'
+import ImportRecipes from './ImportRecipes'
+import RecipeImage from './RecipeImage'
 
 function RecipeLibrary({ activeProfile }) {
   const [addingRecipe, setAddingRecipe] = useState(false)
-
+  const [importingRecipes, setImportingRecipes] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState(null)
-
   const [editingRecipe, setEditingRecipe] = useState(null)
 
   const recipes = useLiveQuery(
@@ -21,30 +22,54 @@ function RecipeLibrary({ activeProfile }) {
     [activeProfile.id]
   )
 
+  async function removeRecipe(recipe) {
+    const confirmed = window.confirm(
+      `Remove "${recipe.title}" from ${activeProfile.name}?\n\nThis only removes the recipe from this profile. It will not affect recipes in any other profile.`
+    )
+
+    if (!confirmed) return
+
+    await db.recipes.update(recipe.id, {
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+
+    setSelectedRecipe(null)
+  }
+
   if (editingRecipe) {
     return (
-        <AddRecipeForm
+      <AddRecipeForm
         activeProfile={activeProfile}
         recipe={editingRecipe}
         onSaved={() => {
-            setEditingRecipe(null)
-            setSelectedRecipe(null)
+          setEditingRecipe(null)
+          setSelectedRecipe(null)
         }}
         onCancel={() => setEditingRecipe(null)}
-        />
+      />
     )
-    }
+  }
 
   if (selectedRecipe) {
-  return (
-    <RecipeDetail
-      recipe={selectedRecipe}
-      activeProfile={activeProfile}
-      onBack={() => setSelectedRecipe(null)}
-      onEdit={() => setEditingRecipe(selectedRecipe)}
-    />
-  )
-}
+    return (
+      <div>
+        <RecipeDetail
+          recipe={selectedRecipe}
+          activeProfile={activeProfile}
+          onBack={() => setSelectedRecipe(null)}
+          onEdit={() => setEditingRecipe(selectedRecipe)}
+        />
+
+        <div className="recipe-danger-zone">
+          <button className="recipe-remove-button" onClick={() => removeRecipe(selectedRecipe)}>
+            Remove recipe from {activeProfile.name}
+          </button>
+          <p>This does not remove a copy used by another profile.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (addingRecipe) {
     return (
@@ -56,38 +81,55 @@ function RecipeLibrary({ activeProfile }) {
     )
   }
 
+  if (importingRecipes) {
+    return (
+      <ImportRecipes
+        activeProfile={activeProfile}
+        onDone={() => setImportingRecipes(false)}
+        onCancel={() => setImportingRecipes(false)}
+      />
+    )
+  }
+
   return (
-  <div className="recipe-library">
+    <div className="recipe-library">
       <div className="library-heading">
         <div>
           <p className="eyebrow">Your library</p>
           <h2>Recipes</h2>
         </div>
 
-        <button
-          className="primary-button compact"
-          onClick={() => setAddingRecipe(true)}
-        >
-          + Add Recipe
-        </button>
+        <div className="library-actions">
+          <button
+            className="text-button"
+            onClick={() => setImportingRecipes(true)}
+          >
+            Import Recipes
+          </button>
+
+          <button
+            className="primary-button compact"
+            onClick={() => setAddingRecipe(true)}
+          >
+            + Add Recipe
+          </button>
+        </div>
       </div>
 
       {!recipes?.length ? (
         <div className="empty-library">
           <strong>No recipes yet</strong>
-          <p>Add your first recipe to get started.</p>
+          <p>Add your first recipe or import an old cookbook to get started.</p>
         </div>
       ) : (
         <div className="recipe-grid">
           {recipes.map((recipe) => (
             <article
-                className="recipe-card"
-                key={recipe.id}
-                onClick={() => setSelectedRecipe(recipe)}
-                >
-              <div className="recipe-image-placeholder">
-                <span>{recipe.title.charAt(0).toUpperCase()}</span>
-              </div>
+              className="recipe-card"
+              key={recipe.id}
+              onClick={() => setSelectedRecipe(recipe)}
+            >
+              <RecipeImage recipe={recipe} />
 
               <div className="recipe-card-body">
                 <h3>{recipe.title}</h3>
@@ -101,12 +143,89 @@ function RecipeLibrary({ activeProfile }) {
                   {recipe.servings && (
                     <span>{recipe.servings} servings</span>
                   )}
+                  {recipe.importSource && <span>Imported</span>}
                 </div>
               </div>
             </article>
           ))}
         </div>
       )}
+
+      <style>{`
+        .library-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .recipe-image-frame {
+          height: 150px;
+          position: relative;
+          overflow: hidden;
+          border-radius: var(--radius-sm);
+          background: var(--primary-soft);
+        }
+
+        .recipe-image-frame img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .recipe-image-fallback {
+          display: none;
+          width: 100%;
+          height: 100%;
+          place-items: center;
+          color: var(--primary);
+          font-size: 2rem;
+          font-weight: 800;
+        }
+
+        .recipe-image-frame.image-failed .recipe-image-fallback {
+          display: grid;
+        }
+
+        .recipe-danger-zone {
+          width: min(980px, 100%);
+          margin: 18px auto 0;
+          padding-top: 16px;
+          border-top: 1px solid var(--border);
+          text-align: right;
+        }
+
+        .recipe-danger-zone p {
+          margin: 5px 0 0;
+          color: var(--text-muted);
+          font-size: 0.75rem;
+        }
+
+        .recipe-remove-button {
+          border: 1px solid #ddb9b9;
+          border-radius: var(--radius-sm);
+          padding: 8px 12px;
+          background: var(--danger-soft);
+          color: var(--danger);
+          font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+          .library-heading {
+            align-items: flex-start;
+          }
+
+          .library-actions {
+            flex-direction: column-reverse;
+            align-items: flex-end;
+            gap: 5px;
+          }
+
+          .recipe-image-frame {
+            height: 130px;
+          }
+        }
+      `}</style>
     </div>
   )
 }

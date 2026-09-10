@@ -32,12 +32,12 @@ function AppShell({
 
       <main className="app-content">
         {currentView === 'home' && (
-            <HomeView activeProfile={activeProfile} />
-            )}
+          <HomeView activeProfile={activeProfile} />
+        )}
 
         {currentView === 'browse' && (
-            <RecipeLibrary activeProfile={activeProfile} />
-            )}
+          <RecipeLibrary activeProfile={activeProfile} />
+        )}
 
         {currentView === 'favorites' && (
           <>
@@ -54,8 +54,8 @@ function AppShell({
         )}
 
         {currentView === 'ingredients' && (
-            <IngredientsLibrary />
-         )}
+          <IngredientsLibrary activeProfile={activeProfile} />
+        )}
       </main>
 
       <nav className="bottom-nav">

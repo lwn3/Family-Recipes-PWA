@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { db } from './db/database'
 import ProfilePicker from './components/ProfilePicker'
 import AppShell from './components/AppShell'
-
+import './components/ButtonTheme.css'
 
 function App() {
   const [activeProfile, setActiveProfile] = useState(null)

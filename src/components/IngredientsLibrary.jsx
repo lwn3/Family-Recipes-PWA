@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
 import IngredientDetail from './IngredientDetail'
@@ -15,40 +15,59 @@ function IngredientsLibrary({ activeProfile }) {
   const [mergeSourceId, setMergeSourceId] = useState(null)
   const [mergeTargetId, setMergeTargetId] = useState('')
 
-  const data = useLiveQuery(async () => {
-    const profileRecipes = await db.recipes
-      .where('profileId')
-      .equals(activeProfile.id)
-      .filter((recipe) => !recipe.deletedAt)
-      .toArray()
+  useEffect(() => {
+    let cancelled = false
 
-    for (const recipe of profileRecipes) {
-      const recipeIngredients = await db.recipeIngredients
-        .where('recipeId')
-        .equals(recipe.id)
+    async function syncRecipeIngredientsToProfile() {
+      const profileRecipes = await db.recipes
+        .where('profileId')
+        .equals(activeProfile.id)
+        .filter((recipe) => !recipe.deletedAt)
         .toArray()
 
-      for (const row of recipeIngredients) {
-        if (!row.ingredientId) continue
+      for (const recipe of profileRecipes) {
+        if (cancelled) return
 
-        const existingMembership = await db.ingredientProfiles
-          .where('[profileId+ingredientId]')
-          .equals([activeProfile.id, row.ingredientId])
-          .first()
+        const recipeIngredients = await db.recipeIngredients
+          .where('recipeId')
+          .equals(recipe.id)
+          .toArray()
 
-        if (!existingMembership || existingMembership.visible === false) {
-          const ingredient = await db.ingredients.get(row.ingredientId)
-          const reviewPending = Boolean(
-            ingredient?.importBatchId &&
-            recipe.importBatchId &&
-            ingredient.importBatchId === recipe.importBatchId
-          )
+        for (const row of recipeIngredients) {
+          if (cancelled) return
+          if (!row.ingredientId) continue
 
-          await ensureIngredientForProfile(activeProfile.id, row.ingredientId, { reviewPending })
+          const existingMembership = await db.ingredientProfiles
+            .where('[profileId+ingredientId]')
+            .equals([activeProfile.id, row.ingredientId])
+            .first()
+
+          if (!existingMembership || existingMembership.visible === false) {
+            const ingredient = await db.ingredients.get(row.ingredientId)
+            const reviewPending = Boolean(
+              ingredient?.importBatchId &&
+              recipe.importBatchId &&
+              ingredient.importBatchId === recipe.importBatchId
+            )
+
+            await ensureIngredientForProfile(activeProfile.id, row.ingredientId, {
+              reviewPending,
+            })
+          }
         }
       }
     }
 
+    syncRecipeIngredientsToProfile().catch((error) => {
+      console.error('Could not sync recipe ingredients to profile', error)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeProfile.id])
+
+  const data = useLiveQuery(async () => {
     const items = await db.ingredients.orderBy('name').toArray()
     const memberships = await db.ingredientProfiles
       .where('profileId')
@@ -58,6 +77,12 @@ function IngredientsLibrary({ activeProfile }) {
     return { items, memberships }
   }, [activeProfile.id])
 
+  const membershipsByIngredient = useMemo(() => {
+    const map = new Map()
+    for (const row of data?.memberships || []) map.set(row.ingredientId, row)
+    return map
+  }, [data])
+
   if (selectedIngredient) {
     return (
       <IngredientDetail
@@ -66,12 +91,6 @@ function IngredientsLibrary({ activeProfile }) {
       />
     )
   }
-
-  const membershipsByIngredient = useMemo(() => {
-    const map = new Map()
-    for (const row of data?.memberships || []) map.set(row.ingredientId, row)
-    return map
-  }, [data])
 
   const visibleItems = (data?.items || []).filter(
     (item) => membershipsByIngredient.has(item.id) && membershipsByIngredient.get(item.id)?.visible !== false

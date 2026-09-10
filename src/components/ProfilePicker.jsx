@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
+import VinylLogo from './VinylLogo'
 import './VisualPolish.css'
 
 function ProfilePicker({ onProfileSelected }) {
@@ -33,11 +34,7 @@ function ProfilePicker({ onProfileSelected }) {
   return (
     <main className="profile-page polished-profile-page">
       <section className="profile-welcome-card">
-        <img
-          className="profile-app-icon"
-          src="/pwa-192x192.png"
-          alt="Family Recipes"
-        />
+        <VinylLogo className="profile-vinyl-logo" />
 
         <div>
           <p className="eyebrow">Welcome to</p>

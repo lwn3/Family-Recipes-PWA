@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import VinylLogo from './VinylLogo'
 import './VisualPolish.css'
 
 function HomeView({ activeProfile }) {
@@ -25,11 +26,7 @@ function HomeView({ activeProfile }) {
           <p>Your family cookbook, meal planner, and grocery helper.</p>
         </div>
 
-        <img
-          className="home-brand-icon"
-          src="/pwa-192x192.png"
-          alt="Family Recipes"
-        />
+        <VinylLogo compact className="home-vinyl-logo" />
       </section>
 
       <section className="home-section">

@@ -21,13 +21,6 @@
   text-align: center;
 }
 
-.profile-app-icon {
-  width: 112px;
-  height: 112px;
-  border-radius: 26px;
-  box-shadow: var(--shadow-md);
-}
-
 .profile-welcome-card h1 {
   margin-bottom: 8px;
 }
@@ -102,11 +95,113 @@
   align-items: start;
 }
 
-.home-brand-icon {
-  width: 68px;
-  height: 68px;
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
+/* Music-themed brand mark: cookbook icon as the label of a vinyl record. */
+.vinyl-logo {
+  position: relative;
+  width: 132px;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      #202627 0,
+      #202627 3px,
+      #2a3031 4px,
+      #2a3031 5px
+    );
+  box-shadow:
+    0 8px 20px rgba(25, 45, 45, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.vinyl-logo::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.vinyl-grooves {
+  position: absolute;
+  inset: 17%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.vinyl-label {
+  position: relative;
+  z-index: 2;
+  width: 48%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #efe7d7;
+  border-radius: 50%;
+  background: #efe7d7;
+  box-shadow: 0 0 0 2px rgba(47, 111, 115, 0.6);
+}
+
+.vinyl-label img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.vinyl-center-hole {
+  position: absolute;
+  z-index: 3;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1b2021;
+  box-shadow: 0 0 0 2px #efe7d7;
+}
+
+.vinyl-logo.compact {
+  width: 78px;
+}
+
+.profile-vinyl-logo {
+  width: 150px;
+}
+
+.home-vinyl-logo {
+  width: 88px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-vinyl-logo .vinyl-grooves,
+  .home-vinyl-logo .vinyl-label,
+  .home-vinyl-logo .vinyl-center-hole {
+    animation: vinyl-spin 18s linear infinite;
+  }
+}
+
+@keyframes vinyl-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Keep the heart perfectly centered regardless of global button rules/font metrics. */
+.favorite-button {
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  vertical-align: middle;
+}
+
+.favorite-button::before,
+.favorite-button::after {
+  line-height: 1;
 }
 
 @media (max-width: 600px) {
@@ -114,10 +209,8 @@
     padding: 22px 18px;
   }
 
-  .profile-app-icon {
-    width: 96px;
-    height: 96px;
-    border-radius: 22px;
+  .profile-vinyl-logo {
+    width: 124px;
   }
 
   .create-profile-row {
@@ -128,9 +221,7 @@
     width: 100%;
   }
 
-  .home-brand-icon {
-    width: 58px;
-    height: 58px;
-    border-radius: 14px;
+  .home-vinyl-logo {
+    width: 68px;
   }
 }

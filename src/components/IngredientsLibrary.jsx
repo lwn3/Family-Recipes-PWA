@@ -16,6 +16,39 @@ function IngredientsLibrary({ activeProfile }) {
   const [mergeTargetId, setMergeTargetId] = useState('')
 
   const data = useLiveQuery(async () => {
+    const profileRecipes = await db.recipes
+      .where('profileId')
+      .equals(activeProfile.id)
+      .filter((recipe) => !recipe.deletedAt)
+      .toArray()
+
+    for (const recipe of profileRecipes) {
+      const recipeIngredients = await db.recipeIngredients
+        .where('recipeId')
+        .equals(recipe.id)
+        .toArray()
+
+      for (const row of recipeIngredients) {
+        if (!row.ingredientId) continue
+
+        const existingMembership = await db.ingredientProfiles
+          .where('[profileId+ingredientId]')
+          .equals([activeProfile.id, row.ingredientId])
+          .first()
+
+        if (!existingMembership || existingMembership.visible === false) {
+          const ingredient = await db.ingredients.get(row.ingredientId)
+          const reviewPending = Boolean(
+            ingredient?.importBatchId &&
+            recipe.importBatchId &&
+            ingredient.importBatchId === recipe.importBatchId
+          )
+
+          await ensureIngredientForProfile(activeProfile.id, row.ingredientId, { reviewPending })
+        }
+      }
+    }
+
     const items = await db.ingredients.orderBy('name').toArray()
     const memberships = await db.ingredientProfiles
       .where('profileId')

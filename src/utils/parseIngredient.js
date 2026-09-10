@@ -92,7 +92,6 @@ const prepNoteWords = new Set([
 
 function parseFraction(value) {
   if (!value) return null
-
   if (unicodeFractions[value]) return unicodeFractions[value]
 
   if (value.includes('/')) {
@@ -135,11 +134,7 @@ function parseQuantity(tokens) {
 }
 
 function looksLikePrepNote(value) {
-  const cleaned = value
-    .trim()
-    .toLowerCase()
-    .replace(/[.;]+$/g, '')
-
+  const cleaned = value.trim().toLowerCase().replace(/[.;]+$/g, '')
   if (!cleaned || cleaned.length > 60) return false
 
   const words = cleaned
@@ -148,7 +143,6 @@ function looksLikePrepNote(value) {
     .filter(Boolean)
 
   if (!words.length || words.length > 7) return false
-
   if (words.some((word) => prepNoteWords.has(word))) return true
 
   return /^(cut|slice|chop|dice|mince|drain|rinse|peel|seed|shred|grate|crush|beat|whisk|cube|trim|thaw|cool|warm|toast|zest|juice)(ed|d)?\b/.test(cleaned)
@@ -159,9 +153,8 @@ export function splitIngredientNote(originalText) {
   if (!cleaned.includes(',')) return { ingredientLine: cleaned, note: '' }
 
   const parts = cleaned.split(',')
-  if (parts.length < 2) return { ingredientLine: cleaned, note: '' }
-
   const candidate = parts[parts.length - 1].trim()
+
   if (!looksLikePrepNote(candidate)) {
     return { ingredientLine: cleaned, note: '' }
   }
@@ -176,11 +169,9 @@ export function splitIngredientNote(originalText) {
 }
 
 export function parseIngredientLine(originalText) {
-  const cleaned = String(originalText || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-
-  const tokens = cleaned.split(' ')
+  const original = String(originalText || '').trim().replace(/\s+/g, ' ')
+  const { ingredientLine, note } = splitIngredientNote(original)
+  const tokens = ingredientLine.split(' ')
   const quantityResult = parseQuantity(tokens)
 
   let position = quantityResult.consumed
@@ -209,9 +200,11 @@ export function parseIngredientLine(originalText) {
   const ingredientText = tokens.slice(position).join(' ').trim()
 
   return {
-    originalText: cleaned,
+    originalText: original,
+    ingredientLine,
     quantity: quantityResult.quantity,
     unit,
     ingredientText,
+    note,
   }
 }

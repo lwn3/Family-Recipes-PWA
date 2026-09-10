@@ -4,6 +4,7 @@ import { db } from '../db/database'
 import AddRecipeForm from './AddRecipeForm'
 import RecipeDetail from './RecipeDetail'
 import ImportRecipes from './ImportRecipes'
+import RecipeImage from './RecipeImage'
 
 function RecipeLibrary({ activeProfile }) {
   const [addingRecipe, setAddingRecipe] = useState(false)
@@ -104,9 +105,7 @@ function RecipeLibrary({ activeProfile }) {
               key={recipe.id}
               onClick={() => setSelectedRecipe(recipe)}
             >
-              <div className="recipe-image-placeholder">
-                <span>{recipe.title.charAt(0).toUpperCase()}</span>
-              </div>
+              <RecipeImage recipe={recipe} />
 
               <div className="recipe-card-body">
                 <h3>{recipe.title}</h3>
@@ -135,6 +134,35 @@ function RecipeLibrary({ activeProfile }) {
           gap: 12px;
         }
 
+        .recipe-image-frame {
+          height: 150px;
+          position: relative;
+          overflow: hidden;
+          border-radius: var(--radius-sm);
+          background: var(--primary-soft);
+        }
+
+        .recipe-image-frame img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .recipe-image-fallback {
+          display: none;
+          width: 100%;
+          height: 100%;
+          place-items: center;
+          color: var(--primary);
+          font-size: 2rem;
+          font-weight: 800;
+        }
+
+        .recipe-image-frame.image-failed .recipe-image-fallback {
+          display: grid;
+        }
+
         @media (max-width: 600px) {
           .library-heading {
             align-items: flex-start;
@@ -144,6 +172,10 @@ function RecipeLibrary({ activeProfile }) {
             flex-direction: column-reverse;
             align-items: flex-end;
             gap: 5px;
+          }
+
+          .recipe-image-frame {
+            height: 130px;
           }
         }
       `}</style>

@@ -14,7 +14,7 @@ function titleCaseIngredient(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-async function findOrCreateIngredient(name) {
+async function findOrCreateIngredient(name, importBatchId) {
   const cleanedName = String(name || '').trim()
   if (!cleanedName) return null
 
@@ -40,6 +40,9 @@ async function findOrCreateIngredient(name) {
     staple: false,
     isIngredient: true,
     isPreparedItem: false,
+    importReviewPending: true,
+    importBatchId,
+    importedAt: now,
     createdAt: now,
     updatedAt: now,
   })
@@ -156,6 +159,7 @@ function ImportRecipes({ activeProfile, onDone, onCancel }) {
 
     try {
       let imported = 0
+      const importBatchId = `import-${Date.now()}`
 
       for (const recipe of chosen) {
         setStatus(`Importing ${imported + 1} of ${chosen.length}: ${recipe.title}`)
@@ -179,6 +183,7 @@ function ImportRecipes({ activeProfile, onDone, onCancel }) {
           imageUrl: recipe.imageUrl || null,
           importSource: 'My CookBook',
           importFileName: fileName,
+          importBatchId,
           importWarnings: [
             recipe.missingDirections ? 'Directions missing from source file' : null,
             recipe.missingIngredients ? 'Ingredients missing from source file' : null,
@@ -192,7 +197,7 @@ function ImportRecipes({ activeProfile, onDone, onCancel }) {
           const originalText = recipe.ingredients[index]
           const parsed = parseIngredientLine(originalText)
           const ingredientName = titleCaseIngredient(parsed.ingredientText)
-          const ingredientId = await findOrCreateIngredient(ingredientName)
+          const ingredientId = await findOrCreateIngredient(ingredientName, importBatchId)
 
           await db.recipeIngredients.add({
             recipeId,
@@ -227,8 +232,8 @@ function ImportRecipes({ activeProfile, onDone, onCancel }) {
         imported++
       }
 
-      setStatus(`${imported} recipe${imported === 1 ? '' : 's'} imported.`)
-      setTimeout(() => onDone(), 500)
+      setStatus(`${imported} recipe${imported === 1 ? '' : 's'} imported. New ingredients are waiting in Ingredients > Import Review.`)
+      setTimeout(() => onDone(), 900)
     } catch (caughtError) {
       console.error(caughtError)
       setError(caughtError.message || 'The recipes could not be imported.')

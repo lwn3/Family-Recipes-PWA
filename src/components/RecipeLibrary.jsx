@@ -3,12 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
 import AddRecipeForm from './AddRecipeForm'
 import RecipeDetail from './RecipeDetail'
+import ImportRecipes from './ImportRecipes'
 
 function RecipeLibrary({ activeProfile }) {
   const [addingRecipe, setAddingRecipe] = useState(false)
-
+  const [importingRecipes, setImportingRecipes] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState(null)
-
   const [editingRecipe, setEditingRecipe] = useState(null)
 
   const recipes = useLiveQuery(
@@ -23,28 +23,28 @@ function RecipeLibrary({ activeProfile }) {
 
   if (editingRecipe) {
     return (
-        <AddRecipeForm
+      <AddRecipeForm
         activeProfile={activeProfile}
         recipe={editingRecipe}
         onSaved={() => {
-            setEditingRecipe(null)
-            setSelectedRecipe(null)
+          setEditingRecipe(null)
+          setSelectedRecipe(null)
         }}
         onCancel={() => setEditingRecipe(null)}
-        />
+      />
     )
-    }
+  }
 
   if (selectedRecipe) {
-  return (
-    <RecipeDetail
-      recipe={selectedRecipe}
-      activeProfile={activeProfile}
-      onBack={() => setSelectedRecipe(null)}
-      onEdit={() => setEditingRecipe(selectedRecipe)}
-    />
-  )
-}
+    return (
+      <RecipeDetail
+        recipe={selectedRecipe}
+        activeProfile={activeProfile}
+        onBack={() => setSelectedRecipe(null)}
+        onEdit={() => setEditingRecipe(selectedRecipe)}
+      />
+    )
+  }
 
   if (addingRecipe) {
     return (
@@ -56,35 +56,54 @@ function RecipeLibrary({ activeProfile }) {
     )
   }
 
+  if (importingRecipes) {
+    return (
+      <ImportRecipes
+        activeProfile={activeProfile}
+        onDone={() => setImportingRecipes(false)}
+        onCancel={() => setImportingRecipes(false)}
+      />
+    )
+  }
+
   return (
-  <div className="recipe-library">
+    <div className="recipe-library">
       <div className="library-heading">
         <div>
           <p className="eyebrow">Your library</p>
           <h2>Recipes</h2>
         </div>
 
-        <button
-          className="primary-button compact"
-          onClick={() => setAddingRecipe(true)}
-        >
-          + Add Recipe
-        </button>
+        <div className="library-actions">
+          <button
+            className="text-button"
+            onClick={() => setImportingRecipes(true)}
+          >
+            Import Recipes
+          </button>
+
+          <button
+            className="primary-button compact"
+            onClick={() => setAddingRecipe(true)}
+          >
+            + Add Recipe
+          </button>
+        </div>
       </div>
 
       {!recipes?.length ? (
         <div className="empty-library">
           <strong>No recipes yet</strong>
-          <p>Add your first recipe to get started.</p>
+          <p>Add your first recipe or import an old cookbook to get started.</p>
         </div>
       ) : (
         <div className="recipe-grid">
           {recipes.map((recipe) => (
             <article
-                className="recipe-card"
-                key={recipe.id}
-                onClick={() => setSelectedRecipe(recipe)}
-                >
+              className="recipe-card"
+              key={recipe.id}
+              onClick={() => setSelectedRecipe(recipe)}
+            >
               <div className="recipe-image-placeholder">
                 <span>{recipe.title.charAt(0).toUpperCase()}</span>
               </div>
@@ -101,12 +120,33 @@ function RecipeLibrary({ activeProfile }) {
                   {recipe.servings && (
                     <span>{recipe.servings} servings</span>
                   )}
+                  {recipe.importSource && <span>Imported</span>}
                 </div>
               </div>
             </article>
           ))}
         </div>
       )}
+
+      <style>{`
+        .library-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+          .library-heading {
+            align-items: flex-start;
+          }
+
+          .library-actions {
+            flex-direction: column-reverse;
+            align-items: flex-end;
+            gap: 5px;
+          }
+        }
+      `}</style>
     </div>
   )
 }

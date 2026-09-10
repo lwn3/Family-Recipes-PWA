@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
+import './VisualPolish.css'
 
 function ProfilePicker({ onProfileSelected }) {
   const profiles = useLiveQuery(() => db.profiles.toArray(), [])
@@ -30,36 +31,61 @@ function ProfilePicker({ onProfileSelected }) {
   }
 
   return (
-    <main className="profile-page">
-      <h1>Family Recipes</h1>
-      <p>Choose your household.</p>
-
-      <div className="profile-list">
-        {profiles?.map((profile) => (
-          <button
-            key={profile.id}
-            className="profile-card"
-            onClick={() => chooseProfile(profile)}
-          >
-            {profile.name}
-          </button>
-        ))}
-      </div>
-
-      <section className="create-profile">
-        <h2>Create Profile</h2>
-
-        <input
-          type="text"
-          placeholder="Family or household name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') createProfile()
-          }}
+    <main className="profile-page polished-profile-page">
+      <section className="profile-welcome-card">
+        <img
+          className="profile-app-icon"
+          src="/pwa-192x192.png"
+          alt="Family Recipes"
         />
 
-        <button onClick={createProfile}>Create Profile</button>
+        <div>
+          <p className="eyebrow">Welcome to</p>
+          <h1>Family Recipes</h1>
+          <p className="profile-welcome-copy">
+            Choose your household or create a new one to get cooking.
+          </p>
+        </div>
+
+        {profiles?.length > 0 && (
+          <div className="profile-list polished-profile-list">
+            {profiles.map((profile) => (
+              <button
+                key={profile.id}
+                className="profile-card polished-profile-card"
+                onClick={() => chooseProfile(profile)}
+              >
+                <span className="profile-card-avatar">
+                  {profile.name.charAt(0).toUpperCase()}
+                </span>
+                <span>{profile.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <section className="create-profile polished-create-profile">
+          <h2>{profiles?.length ? 'Create another household' : 'Create your household'}</h2>
+
+          <div className="create-profile-row">
+            <input
+              type="text"
+              placeholder="Family or household name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') createProfile()
+              }}
+            />
+
+            <button
+              className="primary-button"
+              onClick={createProfile}
+            >
+              Create Profile
+            </button>
+          </div>
+        </section>
       </section>
     </main>
   )

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { db } from '../db/database'
-import { parseIngredientLine } from '../utils/parseIngredient'
+import { parseIngredientLine, parseIngredientAlternatives } from '../utils/parseIngredient'
 import { parseMyCookBookFile } from '../utils/mcbImporter'
 import { ensureIngredientForProfile } from '../utils/profileIngredients'
 import './ImportRecipes.css'
@@ -175,27 +175,47 @@ function ImportRecipes({ activeProfile, onDone, onCancel }) {
         })
 
         for (let index = 0; index < recipe.ingredients.length; index++) {
-          const originalText = recipe.ingredients[index]
-          const parsed = parseIngredientLine(originalText)
-          const ingredientName = titleCaseIngredient(parsed.ingredientText)
+          const sourceText = recipe.ingredients[index]
+          const { primary, substitute } = parseIngredientAlternatives(sourceText)
+          const ingredientName = titleCaseIngredient(primary.ingredientText)
           const ingredientId = await findOrCreateIngredient(
             ingredientName,
             importBatchId,
             activeProfile.id
           )
 
-          await db.recipeIngredients.add({
+          const recipeIngredientId = await db.recipeIngredients.add({
             recipeId,
-            originalText: parsed.ingredientLine || originalText,
-            sourceOriginalText: originalText,
-            quantity: parsed.quantity,
-            unit: parsed.unit,
-            parsedIngredientText: parsed.ingredientText,
+            originalText: primary.ingredientLine || sourceText,
+            sourceOriginalText: sourceText,
+            quantity: primary.quantity,
+            unit: primary.unit,
+            parsedIngredientText: primary.ingredientText,
             ingredientId,
             variantId: null,
-            note: parsed.note || null,
+            note: primary.note || null,
             sortOrder: index,
           })
+
+          if (substitute) {
+            const substituteName = titleCaseIngredient(substitute.ingredientText)
+            const substituteIngredientId = await findOrCreateIngredient(
+              substituteName,
+              importBatchId,
+              activeProfile.id
+            )
+
+            await db.recipeIngredientSubstitutions.add({
+              recipeIngredientId,
+              substituteIngredientId,
+              substituteVariantId: null,
+              note: substitute.note || null,
+              importedQuantity: substitute.quantity,
+              importedUnit: substitute.unit,
+              sourceOriginalText: sourceText,
+              sortOrder: 0,
+            })
+          }
         }
 
         for (let index = 0; index < recipe.directions.length; index++) {

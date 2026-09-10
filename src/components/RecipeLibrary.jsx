@@ -22,6 +22,21 @@ function RecipeLibrary({ activeProfile }) {
     [activeProfile.id]
   )
 
+  async function removeRecipe(recipe) {
+    const confirmed = window.confirm(
+      `Remove "${recipe.title}" from ${activeProfile.name}?\n\nThis only removes the recipe from this profile. It will not affect recipes in any other profile.`
+    )
+
+    if (!confirmed) return
+
+    await db.recipes.update(recipe.id, {
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+
+    setSelectedRecipe(null)
+  }
+
   if (editingRecipe) {
     return (
       <AddRecipeForm
@@ -38,12 +53,21 @@ function RecipeLibrary({ activeProfile }) {
 
   if (selectedRecipe) {
     return (
-      <RecipeDetail
-        recipe={selectedRecipe}
-        activeProfile={activeProfile}
-        onBack={() => setSelectedRecipe(null)}
-        onEdit={() => setEditingRecipe(selectedRecipe)}
-      />
+      <div>
+        <RecipeDetail
+          recipe={selectedRecipe}
+          activeProfile={activeProfile}
+          onBack={() => setSelectedRecipe(null)}
+          onEdit={() => setEditingRecipe(selectedRecipe)}
+        />
+
+        <div className="recipe-danger-zone">
+          <button className="recipe-remove-button" onClick={() => removeRecipe(selectedRecipe)}>
+            Remove recipe from {activeProfile.name}
+          </button>
+          <p>This does not remove a copy used by another profile.</p>
+        </div>
+      </div>
     )
   }
 
@@ -161,6 +185,29 @@ function RecipeLibrary({ activeProfile }) {
 
         .recipe-image-frame.image-failed .recipe-image-fallback {
           display: grid;
+        }
+
+        .recipe-danger-zone {
+          width: min(980px, 100%);
+          margin: 18px auto 0;
+          padding-top: 16px;
+          border-top: 1px solid var(--border);
+          text-align: right;
+        }
+
+        .recipe-danger-zone p {
+          margin: 5px 0 0;
+          color: var(--text-muted);
+          font-size: 0.75rem;
+        }
+
+        .recipe-remove-button {
+          border: 1px solid #ddb9b9;
+          border-radius: var(--radius-sm);
+          padding: 8px 12px;
+          background: var(--danger-soft);
+          color: var(--danger);
+          font-weight: 700;
         }
 
         @media (max-width: 600px) {

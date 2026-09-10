@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import './VisualPolish.css'
+
 function HomeView({ activeProfile }) {
   const dieValue = useMemo(
     () => Math.floor(Math.random() * 6) + 1,
@@ -13,12 +15,21 @@ function HomeView({ activeProfile }) {
     5: [1, 3, 5, 7, 9],
     6: [1, 3, 4, 6, 7, 9],
   }
+
   return (
     <div className="home-view">
-      <section className="home-hero">
-        <p className="eyebrow">Now cooking with</p>
-        <h2>{activeProfile.name}</h2>
-        <p>Your family cookbook, meal planner, and grocery helper.</p>
+      <section className="home-hero home-hero-with-icon">
+        <div>
+          <p className="eyebrow">Now cooking with</p>
+          <h2>{activeProfile.name}</h2>
+          <p>Your family cookbook, meal planner, and grocery helper.</p>
+        </div>
+
+        <img
+          className="home-brand-icon"
+          src="/pwa-192x192.png"
+          alt="Family Recipes"
+        />
       </section>
 
       <section className="home-section">
@@ -37,64 +48,41 @@ function HomeView({ activeProfile }) {
 
       <section className="home-section">
         <div className="section-heading">
-            <div>
-            <p className="eyebrow">Nelson Family</p>
+          <div>
+            <p className="eyebrow">{activeProfile.name}</p>
             <h3>Speed Dial</h3>
-            </div>
+          </div>
 
-            <button>See all</button>
+          <button>See all</button>
         </div>
 
         <div className="speed-dial-grid">
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
-            <button className="speed-dial-card placeholder-recipe">
-            <span className="recipe-label">Recipe</span>
-            </button>
-
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
             <button
-                className="speed-dial-card random-recipe full-die"
-                aria-label="Choose a random recipe"
-                >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((position) => (
-                    <span
-                    key={position}
-                    className={
-                        dieDots[dieValue].includes(position)
-                        ? 'full-die-dot visible'
-                        : 'full-die-dot'
-                    }
-                    />
-                ))}
-                </button>
+              className="speed-dial-card placeholder-recipe"
+              key={item}
+            >
+              <span className="recipe-label">Recipe</span>
+            </button>
+          ))}
+
+          <button
+            className="speed-dial-card random-recipe full-die"
+            aria-label="Choose a random recipe"
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((position) => (
+              <span
+                key={position}
+                className={
+                  dieDots[dieValue].includes(position)
+                    ? 'full-die-dot visible'
+                    : 'full-die-dot'
+                }
+              />
+            ))}
+          </button>
         </div>
-        </section>
+      </section>
 
       <section className="home-section">
         <div className="section-heading">
